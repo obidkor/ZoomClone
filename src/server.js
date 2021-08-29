@@ -11,7 +11,7 @@ app.get("/", (req, res) => res.render("home")); // only route handler =>> render
 app.get("/*", (req, res) => res.redirect("/")); // force to backward to home
 
 // http protocol
-const handleListen = () => console.log(`Listening on http://localhost:3000`);
+const handleListen = () => console.log(`Listening on http://localhost:4000`);
 // app.listen(3000, handleListen);
 
 // host
@@ -23,7 +23,33 @@ function handleConnection(socket) {
   console.log(socket);
 }
 
-wss.on("connection", handleConnection);
+//users
+const sockets = [];
+
+//server eventhandler
+wss.on("connection", (socket) => {
+  //add userslist
+  sockets.push(socket);
+  socket["nickname"] = "Anonymous";
+  console.log("Connected to Browser ✅");
+  //socket eventhandler
+  socket.on("close", () => {
+    console.log("Disconnect from the Browser ❌");
+  });
+  socket.on("message", (msg) => {
+    const message = JSON.parse(msg.toString());
+    switch (message.type) {
+      case "new_message":
+        //server message to client
+        sockets.forEach((aSocket) => {
+          aSocket.send(`${socket.nickname} : ${message.payload.toString()}`);
+        });
+        break;
+      case "nickname":
+        socket["nickname"] = message.payload.toString();
+    }
+  });
+});
 
 // port
-server.listen(3000, handleListen);
+server.listen(4000, handleListen);
