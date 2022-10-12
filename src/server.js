@@ -13,14 +13,25 @@ app.get("/*", (req, res) => res.redirect("/")); // force to backward to home
 // host
 const httpServer = http.createServer(app);
 const wsSever = SocketIO(httpServer);
-
+//connection
 wsSever.on("connection", (socket) => {
-  socket.on("enter_room", (roomName, done) => {
-    console.log(roomName);
-    setTimeout(() => {
-      // back에서 파라미터를 넘길수도 있음.
-      done("hello from backend");
-    }, 1000);
+  // socket io 구독 이벤트는 여기에 작성해준다.
+
+  // onAny : 모든 이벤트에서 공통으로 실행
+  socket.onAny((events) => {
+    console.log(`Socket events : ${events}`);
+  });
+  socket.on("enter_room", (roomName, showRoom) => {
+    //최초 room은 connection되면 자동으로 생김.
+    //console.log(socket.id); // socket.id : 현재 그룹 id
+    //console.log(`beform join:`, socket.rooms); // socket.rooms그룹이 어떤게 있는가
+
+    // socket.join : socket끼리 그룹짓기(room 개념) : join하면 기존에 없으면 새로생기고 있는거면 거기에 그룹화됨.
+    // join(1,2,3,4) : 여러개 방에 동시에 입장도 가능
+    socket.join(roomName);
+    showRoom();
+    //socket.leave(string roomname) : 방 떠나기
+    //socket.to(string roomname).emit(이벤트명) : 방전체에 이벤트 생성하기 chaining 이라 to().to()...이런식으로 가능
   });
 });
 

@@ -35,10 +35,17 @@ const socket = io();
 
 const welcome = document.getElementById("welcome");
 const form = welcome.querySelector("form");
+const room = document.getElementById("room");
 
-function backendDone(msg) {
-  // back에서 넘어온 파라미터를 실행
-  console.log(`The backend says: `, msg);
+room.hidden = true;
+
+let roomName;
+
+function showRoom() {
+  welcome.hidden = true;
+  room.hidden = false;
+  const h3 = room.querySelector("h3");
+  h3.innerText = `Room : ${roomName}`;
 }
 
 function handleRoomSubmit(event) {
@@ -50,7 +57,8 @@ function handleRoomSubmit(event) {
   // websocket은 string을 보내지만 socketio는 object를 전송할수 있다.
   // 3번째 args로 fuction을 보내고 있음.(callback 용도? back에서 보내진 fuc을 호출할 수 있음.. 실행은 front에서 됨. callback fucc은 마지막 args여야함..)
   // agrs의 숫자는 원하는 만큼 보낼수 있는듯?
-  socket.emit("enter_room", input.value, backendDone);
+  socket.emit("enter_room", input.value, showRoom);
+  roomName = input.value;
   input.value = "";
 }
 
