@@ -15,11 +15,12 @@ const httpServer = http.createServer(app);
 const wsSever = SocketIO(httpServer);
 
 wsSever.on("connection", (socket) => {
-  socket.on("enter_room", (msg, done) => {
-    console.log(msg);
+  socket.on("enter_room", (roomName, done) => {
+    console.log(roomName);
     setTimeout(() => {
-      done(); // 여기서 호출하면 front인 app.js에서 실행됨.(callback 용도?)
-    }, 3000);
+      // back에서 파라미터를 넘길수도 있음.
+      done("hello from backend");
+    }, 1000);
   });
 });
 
