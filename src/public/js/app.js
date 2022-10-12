@@ -29,5 +29,25 @@
 // }
 // 브라우저 내장 라이브러리 websocket으로 만든것 끝
 
+// socket io version 시작
 // 백엔드 socket io와 이벤트 주고받는 펑션
 const socket = io();
+
+const welcome = document.getElementById("welcome");
+const form = welcome.querySelector("form");
+
+function handleRoomSubmit(event) {
+  event.preventDefault();
+  const input = form.querySelector("input");
+
+  // websocket의 socketsend // room이라는 event를 emit
+  // websocket은 이벤트명이정해져있지만 socketio는 이벤트명을 정할수 이씀
+  // websocket은 string을 보내지만 socketio는 object를 전송할수 있다.
+  // 3번째 args로 fuction을 보내고 있음.(callback 용도? back에서 보내진 fuc을 호출할 수 있음.. 실행은 front에서 됨.)
+  socket.emit("enter_room", { payload: input.value }, () => {
+    console.log("server is done");
+  });
+  input.value = "";
+}
+
+form.addEventListener("submit", handleRoomSubmit);
