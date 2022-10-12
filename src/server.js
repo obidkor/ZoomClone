@@ -30,8 +30,10 @@ wsSever.on("connection", (socket) => {
     // join(1,2,3,4) : 여러개 방에 동시에 입장도 가능
     socket.join(roomName);
     showRoom();
+    socket.to(roomName).emit("welcome"); // roomname에 들어있는 모든 socketid에 noti
     //socket.leave(string roomname) : 방 떠나기
-    //socket.to(string roomname).emit(이벤트명) : 방전체에 이벤트 생성하기 chaining 이라 to().to()...이런식으로 가능
+    //socket.to(string roomname).emit(이벤트명) : 방전체에 이벤트 생성하기 chaining 이라 to().to()...이런식으로 가능 ==> 나를 제외한 room사람들에게 broadcast
+    //socket.to(socketid).emit(이벤트): private 이벤트를 보낼수도 있음.
   });
 });
 
