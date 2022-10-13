@@ -35,6 +35,17 @@ wsSever.on("connection", (socket) => {
     //socket.to(string roomname).emit(이벤트명) : 방전체에 이벤트 생성하기 chaining 이라 to().to()...이런식으로 가능 ==> 나를 제외한 room사람들에게 broadcast
     //socket.to(socketid).emit(이벤트): private 이벤트를 보낼수도 있음.
   });
+  // disconnecting은 socketio 내장 이벤트명이다..
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) => {
+      socket.to(room).emit("bye");
+    });
+  });
+
+  socket.on("new_message", (msg, room, done) => {
+    socket.to(room).emit("new_message", msg);
+    done();
+  });
 });
 
 // http protocol
