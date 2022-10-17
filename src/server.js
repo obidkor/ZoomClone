@@ -1,6 +1,7 @@
 import http from "http";
 // import WebSocket from "ws";
-import SocketIO from "socket.io";
+import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 import express from "express";
 
 //express settings
@@ -13,7 +14,27 @@ app.get("/*", (req, res) => res.redirect("/")); // force to backward to home
 
 // host
 const httpServer = http.createServer(app);
-const wsSever = SocketIO(httpServer);
+const wsSever = new Server(httpServer, {
+  // @socket.io/admin-ui 설정
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
+
+//@socket.io/admin-ui 설정
+instrument(wsSever, {
+  auth: false,
+});
+
+//@socket.io/admin-ui 비밀번호 쓰게 하려면..
+// instrument(io, {
+//   auth: {
+//     type: "basic",
+//     username: "admin",
+//     password: "$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS" // "changeit" encrypted with bcrypt
+//   },
+// });
 
 // publicroom만 리턴하는 펑션(defalut socket ID != room socket ID 이면 public room)
 function publicRooms() {
