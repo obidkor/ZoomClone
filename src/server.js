@@ -15,7 +15,7 @@ app.get("/*", (req, res) => res.redirect("/")); // force to backward to home
 const httpServer = http.createServer(app);
 const wsSever = SocketIO(httpServer);
 
-// publicroom만 남기는 펑션(defalut socket ID != room socket ID 이면 public room)
+// publicroom만 리턴하는 펑션(defalut socket ID != room socket ID 이면 public room)
 function publicRooms() {
   //const sid = wsSever.sockets.adapter.sids;
   //const room = wsSever.sockets.adapter.rooms;
@@ -33,6 +33,11 @@ function publicRooms() {
   });
 
   return publicRooms;
+}
+
+// Room에 조인된 sid를 카운트하는 펑션
+function countRoom(roomName) {
+  return wsSever.sockets.adapter.rooms.get(roomName)?.size;
 }
 
 //connection
@@ -55,7 +60,7 @@ wsSever.on("connection", (socket) => {
     // join(1,2,3,4) : 여러개 방에 동시에 입장도 가능
     socket.join(roomName);
     showRoom();
-    socket.to(roomName).emit("welcome", socket.nickname); // roomname에 들어있는 모든 socketid에 noti
+    socket.to(roomName).emit("welcome", socket.nickname, countRoom(roomName)); // roomname에 들어있는 모든 socketid에 noti
     //socket.leave(string roomname) : 방 떠나기
     //socket.to(string roomname).emit(이벤트명) : 방전체에 이벤트 생성하기 chaining 이라 to().to()...이런식으로 가능 ==> 나를 제외한 room사람들에게 broadcast
     //socket.to(socketid).emit(이벤트): private 이벤트를 보낼수도 있음.
@@ -67,7 +72,7 @@ wsSever.on("connection", (socket) => {
   // disconnecting은 socketio 내장 이벤트명이다..
   socket.on("disconnecting", () => {
     socket.rooms.forEach((room) => {
-      socket.to(room).emit("bye", socket.nickname);
+      socket.to(room).emit("bye", socket.nickname, countRoom(room) - 1);
     });
   });
 
