@@ -14,6 +14,27 @@ app.get("/*", (req, res) => res.redirect("/")); // force to backward to home
 // host
 const httpServer = http.createServer(app);
 const wsSever = SocketIO(httpServer);
+
+// publicroom만 남기는 펑션(defalut socket ID != room socket ID 이면 public room)
+function publicRooms() {
+  //const sid = wsSever.sockets.adapter.sids;
+  //const room = wsSever.sockets.adapter.rooms;
+  const {
+    sockets: {
+      adapter: { sids, rooms },
+    },
+  } = wsSever;
+
+  const publicRooms = [];
+  rooms.forEach((_, key) => {
+    if (sids.get(key) === undefined) {
+      publicRooms.push(key);
+    }
+  });
+
+  return publicRooms;
+}
+
 //connection
 wsSever.on("connection", (socket) => {
   // socket io 구독 이벤트는 여기에 작성해준다.
@@ -32,13 +53,15 @@ wsSever.on("connection", (socket) => {
 
     // socket.join : socket끼리 그룹짓기(room 개념) : join하면 기존에 없으면 새로생기고 있는거면 거기에 그룹화됨.
     // join(1,2,3,4) : 여러개 방에 동시에 입장도 가능
-    console.log(socket.nickname);
     socket.join(roomName);
     showRoom();
     socket.to(roomName).emit("welcome", socket.nickname); // roomname에 들어있는 모든 socketid에 noti
     //socket.leave(string roomname) : 방 떠나기
     //socket.to(string roomname).emit(이벤트명) : 방전체에 이벤트 생성하기 chaining 이라 to().to()...이런식으로 가능 ==> 나를 제외한 room사람들에게 broadcast
     //socket.to(socketid).emit(이벤트): private 이벤트를 보낼수도 있음.
+
+    // 모든 socket에 publicRoom 리스트 전송
+    wsSever.sockets.emit("room_change", publicRooms());
   });
 
   // disconnecting은 socketio 내장 이벤트명이다..
@@ -46,6 +69,11 @@ wsSever.on("connection", (socket) => {
     socket.rooms.forEach((room) => {
       socket.to(room).emit("bye", socket.nickname);
     });
+  });
+
+  socket.on("disconnect", () => {
+    // 모든 socket에 publicRoom 리스트 전송
+    wsSever.sockets.emit("room_change", publicRooms());
   });
 
   // message보내는 이벤트
