@@ -12,14 +12,20 @@ let myStream;
 let muted = false;
 let cameraOff = false;
 
+// mediaDevices.enumerateDevices() 장비리스트에서 카메라 장비리스트 가져오기(input)
 async function getCameras() {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const cameras = devices.filter((device) => device.kind === "videoinput");
+    const currentCamera = myStream.getVideoTracks()[0];
     cameras.forEach((camera) => {
       const option = document.createElement("option");
       option.value = camera.deviceId;
       option.innerText = camera.label;
+      // 현재 카메라가 선택된 경우
+      if (currentCamera.label == cameara.label) {
+        option.selected = true;
+      }
       cameraSelect.appendChild(option);
     });
   } catch (e) {
@@ -28,14 +34,28 @@ async function getCameras() {
 }
 
 //user의 userMedia string
-async function getMedia() {
+async function getMedia(deviceId) {
+  // 초기 media 설정
+  const initialConstraints = {
+    audio: true,
+    video: { facingMode: "user" },
+  };
+  // camera id 잇을 경우 media설정
+  const cameraConstraints = {
+    audio: true,
+    video: { deviceId: { exact: deviceId } },
+  };
   try {
-    myStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
+    // usermedia를 stream에 넣어준다.
+    myStream = await navigator.mediaDevices.getUserMedia(
+      // deviceID 유무에 따라 media설정을 다르게 넣어준다.
+      deviceId ? cameraConstraints : initialConstraints
+    );
+    //stream을 video element에 넣어준다.
     myFace.srcObject = myStream;
-    await getCameras();
+    if (!deviceId) {
+      await getCameras();
+    }
   } catch (e) {
     console.log(e);
   }
@@ -71,8 +91,14 @@ function handleCameraClick() {
   }
 }
 
+//camera selectiong을 변경할 경우
+async function handleCameraChange() {
+  await getMedia(cameraSelect.value);
+}
+
 muteBtn.addEventListener("click", handleMuteClick);
 cameraBtn.addEventListener("click", handleCameraClick);
+cameraSelect.addEventListener("input", handleCameraChange);
 // 브라우저 내장 라이브러리 WebSocket으로 만든것 시작
 // 프론트 소켓 객체... 이걸로 이벤트 주고받음.
 //const socket = new WebSocket(`ws://${window.location.host}`); // 브라우저 내장 소켓라이브러리
