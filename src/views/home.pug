@@ -10,21 +10,28 @@ html(lang="en")
         header 
             h1 Noom
         main
-            div#welcome
-                form
-                    input(placeholder ="room name", required, type="text")
-                    button Enter Room
-                h4 Open Rooms:
-                ul
-            div#room  
-                h3
-                ul
-                form#name
-                    input(placeholder="nickname",required, type=text)
-                    button Save                
-                form#msg
-                    input(placeholder="message",required, type=text)
-                    button Send
+            div#myStream
+                video#myFace(autoplay, palysinline, width ="400",height = "400")
+                button#mute Mute
+                button#camera Turn CAMERA Off
+                select#cameras
+            //- 2022-10-18,socketio chat 프로그램 주석시작
+            //- div#welcome
+            //-     form
+            //-         input(placeholder ="room name", required, type="text")
+            //-         button Enter Room
+            //-     h4 Open Rooms:
+            //-     ul
+            //- div#room  
+            //-     h3
+            //-     ul
+            //-     form#name
+            //-         input(placeholder="nickname",required, type=text)
+            //-         button Save                
+            //-     form#msg
+            //-         input(placeholder="message",required, type=text)
+            //-         button Send
+            //- 2022-10-18,socketio chat 프로그램 주석끝
         // socket.io 임포트
         script(src="/socket.io/socket.io.js")
         // 프론트 js파일 임포트
