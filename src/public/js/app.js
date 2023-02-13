@@ -7,10 +7,17 @@ const myFace = document.getElementById("myFace");
 const muteBtn = document.getElementById("mute");
 const cameraBtn = document.getElementById("camera");
 const cameraSelect = document.getElementById("cameras");
+
+//call div
+const call = document.getElementById("call");
+//call은 처음에 히든이다.
+call.hidden = true;
+
 // audio + video = stream / settings
 let myStream;
 let muted = false;
 let cameraOff = false;
+let roomName;
 
 // mediaDevices.enumerateDevices() 장비리스트에서 카메라 장비리스트 가져오기(input)
 async function getCameras() {
@@ -61,9 +68,6 @@ async function getMedia(deviceId) {
   }
 }
 
-// Media 켜두기
-getMedia();
-
 // Audio Tracks 가지고 와서 enable
 function handleMuteClick() {
   myStream
@@ -99,6 +103,34 @@ async function handleCameraChange() {
 muteBtn.addEventListener("click", handleMuteClick);
 cameraBtn.addEventListener("click", handleCameraClick);
 cameraSelect.addEventListener("input", handleCameraChange);
+
+//welcome(room name 고르기 기능 관련)
+const welcome = document.getElementById("welcome");
+const welcomeForm = welcome.querySelector("form");
+
+//roomName 고르면 콜백 => 카메라 켜기 funciton
+function startMedia() {
+  welcome.hidden = true;
+  call.hidden = false;
+  getMedia();
+}
+
+// roomName 제출 펑션
+function handleWelcomeSubmit(event) {
+  event.preventDefault();
+  const input = welcome.querySelector("input");
+  socket.emit("join_room", input.value, startMedia);
+  roomName = input.value;
+  input.value = "";
+}
+
+welcomeForm.addEventListener("submit", handleWelcomeSubmit);
+
+//Socket code
+socket.on("welcome", () => {
+  console.log("someone joined");
+});
+
 // 브라우저 내장 라이브러리 WebSocket으로 만든것 시작
 // 프론트 소켓 객체... 이걸로 이벤트 주고받음.
 //const socket = new WebSocket(`ws://${window.location.host}`); // 브라우저 내장 소켓라이브러리

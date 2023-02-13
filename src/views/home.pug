@@ -10,11 +10,16 @@ html(lang="en")
         header 
             h1 Noom
         main
-            div#myStream
-                video#myFace(autoplay, palysinline, width ="400",height = "400")
-                button#mute Mute
-                button#camera Turn CAMERA Off
-                select#cameras
+            div#welcome
+                form
+                    input(placeholder="room name", required, type="text")
+                    button Enter Room
+            div#call
+                div#myStream
+                    video#myFace(autoplay, palysinline, width ="400",height = "400")
+                    button#mute Mute
+                    button#camera Turn CAMERA Off
+                    select#cameras
             //- 2022-10-18,socketio chat 프로그램 주석시작
             //- div#welcome
             //-     form
