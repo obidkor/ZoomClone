@@ -18,6 +18,7 @@ let myStream;
 let muted = false;
 let cameraOff = false;
 let roomName;
+let myPeerConnection;
 
 // mediaDevices.enumerateDevices() 장비리스트에서 카메라 장비리스트 가져오기(input)
 async function getCameras() {
@@ -108,28 +109,71 @@ cameraSelect.addEventListener("input", handleCameraChange);
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
-//roomName 고르면 콜백 => 카메라 켜기 funciton
-function startMedia() {
+//roomName 고르면 콜백 => getMedtia + RTCPeerConnection
+async function initCall() {
   welcome.hidden = true;
   call.hidden = false;
-  getMedia();
+  await getMedia();
+  makeConnection();
 }
 
 // roomName 제출 펑션
-function handleWelcomeSubmit(event) {
+async function handleWelcomeSubmit(event) {
   event.preventDefault();
   const input = welcome.querySelector("input");
-  socket.emit("join_room", input.value, startMedia);
+  // getMedtia + RTCPeerConnection
+  await initCall();
+  socket.emit("join_room", input.value);
   roomName = input.value;
   input.value = "";
 }
 
 welcomeForm.addEventListener("submit", handleWelcomeSubmit);
 
-//Socket code
-socket.on("welcome", () => {
-  console.log("someone joined");
+//Socket codes
+// RTC offer(createOffer() => setLocalDescription()) => socket sends the offer
+socket.on("welcome", async () => {
+  // offer 생성
+  const offer = await myPeerConnection.createOffer();
+  myPeerConnection.setLocalDescription(offer);
+
+  console.log("send the offer");
+
+  //send offer to server and server would either to another peer.
+  socket.emit("offer", offer, roomName);
 });
+
+// another peer RTC answer(createAnswer() => setLocalDescription()) => socket sends the answer
+socket.on("offer", async (offer) => {
+  //myPeerConnection이 생성되기 전이 offer event가 시행될 수 있으므로
+  //먼저 myPeerConnection을 생성해줘야함!!
+
+  //setRemoteDescription offer!
+  myPeerConnection.setRemoteDescription(offer);
+
+  // anwer 생성
+  const answer = await myPeerConnection.createAnswer();
+  myPeerConnection.setLocalDescription(answer);
+
+  // send answer to server and server would either to origin peer
+  socket.emit("answer", answer, roomName);
+});
+
+// origin peer receives RTC answer(set remoteDescription)
+socket.on("answer", (answer) => {
+  // origin peer setRemoteDescription(answer);
+  myPeerConnection.setRemoteDescription(answer);
+});
+
+// WebRTC code
+// 보내는쪽 : getUserMedia() => addStream() => createOffer() => setLocalDescription(offer) => (receive answer) => setRemoteDescription(answer)
+// 받는쪽 : (receive offer) => setRemoteDescription(offer) => getUserMedia() => addStream() => createAnswer() => setLocalDescription(answer)
+function makeConnection() {
+  myPeerConnection = new RTCPeerConnection();
+  myStream
+    .getTracks()
+    .forEach((track) => myPeerConnection.addTrack(track, myStream));
+}
 
 // 브라우저 내장 라이브러리 WebSocket으로 만든것 시작
 // 프론트 소켓 객체... 이걸로 이벤트 주고받음.
