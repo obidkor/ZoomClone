@@ -147,6 +147,7 @@ socket.on("welcome", async () => {
 socket.on("offer", async (offer) => {
   //myPeerConnection이 생성되기 전이 offer event가 시행될 수 있으므로
   //먼저 myPeerConnection을 생성해줘야함!!
+  console.log("receive the offer");
 
   //setRemoteDescription offer!
   myPeerConnection.setRemoteDescription(offer);
@@ -157,12 +158,20 @@ socket.on("offer", async (offer) => {
 
   // send answer to server and server would either to origin peer
   socket.emit("answer", answer, roomName);
+  console.log("send the answer");
 });
 
 // origin peer receives RTC answer(set remoteDescription)
 socket.on("answer", (answer) => {
   // origin peer setRemoteDescription(answer);
+  console.log("receive the answer");
   myPeerConnection.setRemoteDescription(answer);
+});
+
+// WebRTC IceCandidate Event receiver!
+socket.on("ice", (ice) => {
+  console.log("receive candidate");
+  myPeerConnection.addIceCandidate(ice);
 });
 
 // WebRTC code
@@ -170,11 +179,28 @@ socket.on("answer", (answer) => {
 // 받는쪽 : (receive offer) => setRemoteDescription(offer) => getUserMedia() => addStream() => createAnswer() => setLocalDescription(answer)
 function makeConnection() {
   myPeerConnection = new RTCPeerConnection();
+  // WebRTC add IceCandidate Event handler
+  myPeerConnection.addEventListener("icecandidate", handleIce);
+  // WebRTC add another Peer's Stream Event handler
+  myPeerConnection.addEventListener("addstream", handleAddStream);
   myStream
     .getTracks()
     .forEach((track) => myPeerConnection.addTrack(track, myStream));
 }
 
+// WebRTC IceCandidate Event handler
+function handleIce(data) {
+  console.log("send candidate");
+  socket.emit("ice", data.candidate, roomName);
+}
+
+// WebRTC add another Peer's Stream Event handler
+function handleAddStream(data) {
+  const peerFace = document.getElementById("peerFace");
+  //console.log("Peer's Stream", data.stream);
+  //console.log("My's Stream", myPeerConnection.stream);
+  peerFace.srcObject = data.stream;
+}
 // 브라우저 내장 라이브러리 WebSocket으로 만든것 시작
 // 프론트 소켓 객체... 이걸로 이벤트 주고받음.
 //const socket = new WebSocket(`ws://${window.location.host}`); // 브라우저 내장 소켓라이브러리
