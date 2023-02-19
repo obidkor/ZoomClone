@@ -31,10 +31,16 @@ async function getCameras() {
       option.value = camera.deviceId;
       option.innerText = camera.label;
       // 현재 카메라가 선택된 경우
-      if (currentCamera.label == cameara.label) {
+      if (currentCamera.label == camera.label) {
         option.selected = true;
       }
       cameraSelect.appendChild(option);
+
+      // 카메라가 하나밖에 없어서 하나더 만듦.
+      const option2 = document.createElement("option");
+      option2.value = camera.deviceId + 1;
+      option2.innerText = camera.label + "test";
+      cameraSelect.appendChild(option2);
     });
   } catch (e) {
     console.log(e);
@@ -99,6 +105,16 @@ function handleCameraClick() {
 //camera selectiong을 변경할 경우
 async function handleCameraChange() {
   await getMedia(cameraSelect.value);
+
+  // 카메라를 바꿀경우 바꾼 카메라 Track을 myStream을 다시 바꿔줘야함.
+  if (myPeerConnection) {
+    const videoTrack = myStream.getVideoTracks()[0];
+    console.log(videoTrack);
+    const videoSender = myPeerConnection
+      .getSenders() // RTCRtpSender : Sender는 다른 Peer에 보내진 Media Stream Track을 컨트롤할 수 있음.
+      .find((sender) => sender.track.kind === "video");
+    videoSender.replaceTrack(videoTrack); // sender를 통해 Track변경가능
+  }
 }
 
 muteBtn.addEventListener("click", handleMuteClick);
