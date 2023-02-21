@@ -36,11 +36,11 @@ async function getCameras() {
       }
       cameraSelect.appendChild(option);
 
-      // 카메라가 하나밖에 없어서 하나더 만듦.
-      const option2 = document.createElement("option");
-      option2.value = camera.deviceId + 1;
-      option2.innerText = camera.label + "test";
-      cameraSelect.appendChild(option2);
+      // // 카메라가 하나밖에 없어서 하나더 만듦.
+      // const option2 = document.createElement("option");
+      // option2.value = camera.deviceId + 1;
+      // option2.innerText = camera.label + "test";
+      // cameraSelect.appendChild(option2);
     });
   } catch (e) {
     console.log(e);
@@ -194,7 +194,20 @@ socket.on("ice", (ice) => {
 // 보내는쪽 : getUserMedia() => addStream() => createOffer() => setLocalDescription(offer) => (receive answer) => setRemoteDescription(answer)
 // 받는쪽 : (receive offer) => setRemoteDescription(offer) => getUserMedia() => addStream() => createAnswer() => setLocalDescription(answer)
 function makeConnection() {
-  myPeerConnection = new RTCPeerConnection();
+  myPeerConnection = new RTCPeerConnection({
+    // 구글 무료 stun 서버(Peer의 네트워크 스위치 IP 제공용)
+    iceServers: [
+      {
+        urls: [
+          "stun:stun.l.google.com:19302",
+          "stun:stun1.l.google.com:19302",
+          "stun:stun2.l.google.com:19302",
+          "stun:stun3.l.google.com:19302",
+          "stun:stun4.l.google.com:19302",
+        ],
+      },
+    ],
+  });
   // WebRTC add IceCandidate Event handler
   myPeerConnection.addEventListener("icecandidate", handleIce);
   // WebRTC add another Peer's Stream Event handler
