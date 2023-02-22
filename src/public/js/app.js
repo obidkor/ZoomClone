@@ -19,6 +19,7 @@ let muted = false;
 let cameraOff = false;
 let roomName;
 let myPeerConnection;
+let myDataChannel;
 
 // mediaDevices.enumerateDevices() 장비리스트에서 카메라 장비리스트 가져오기(input)
 async function getCameras() {
@@ -149,6 +150,13 @@ welcomeForm.addEventListener("submit", handleWelcomeSubmit);
 //Socket codes
 // RTC offer(createOffer() => setLocalDescription()) => socket sends the offer
 socket.on("welcome", async () => {
+  // Data Channel => offer가 new DataChannel 해줘야함.
+  myDataChannel = myPeerConnection.createDataChannel("chat");
+  myDataChannel.addEventListener("message", (event) => {
+    console.log(event.data);
+  });
+  console.log("made data channel");
+
   // offer 생성
   const offer = await myPeerConnection.createOffer();
   myPeerConnection.setLocalDescription(offer);
@@ -161,6 +169,15 @@ socket.on("welcome", async () => {
 
 // another peer RTC answer(createAnswer() => setLocalDescription()) => socket sends the answer
 socket.on("offer", async (offer) => {
+  // Data Channel => offer에서 생성한 DataChannel에 이벤트 등록
+  myPeerConnection.addEventListener("datachannel", (event) => {
+    myDataChannel = event.channel; // offer받는 쪽에서 channel을 정의해야함.
+    // chat 보내려면 myDataChannel.send("~~~")
+    myDataChannel.addEventListener("message", (event) => {
+      console.log(event.data);
+    });
+  });
+
   //myPeerConnection이 생성되기 전이 offer event가 시행될 수 있으므로
   //먼저 myPeerConnection을 생성해줘야함!!
   console.log("receive the offer");
