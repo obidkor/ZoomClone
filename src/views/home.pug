@@ -21,6 +21,15 @@ html(lang="en")
                     button#camera Turn CAMERA Off
                     select#cameras
                     video#peerFace(autoplay, palysinline, width ="400",height = "400")
+                div#room  
+                    h3                    
+                    //- form#name
+                    //-     input(placeholder="nickname",required, type=text)
+                    //-     button Save
+                    ul                
+                    form#msg
+                        input(placeholder="message",required, type=text)
+                        button Send                    
             //- 2022-10-18,socketio chat 프로그램 주석시작
             //- div#welcome
             //-     form
@@ -28,15 +37,7 @@ html(lang="en")
             //-         button Enter Room
             //-     h4 Open Rooms:
             //-     ul
-            //- div#room  
-            //-     h3
-            //-     ul
-            //-     form#name
-            //-         input(placeholder="nickname",required, type=text)
-            //-         button Save                
-            //-     form#msg
-            //-         input(placeholder="message",required, type=text)
-            //-         button Send
+
             //- 2022-10-18,socketio chat 프로그램 주석끝
         // socket.io 임포트
         script(src="/socket.io/socket.io.js")

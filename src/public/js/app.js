@@ -2,6 +2,12 @@
 // 백엔드 socket io와 이벤트 주고받는 펑션
 const socket = io();
 
+// room div
+
+// 2022-10-18, socketio chat프로그래 주석시작
+const room = document.getElementById("room");
+const msgForm = room.querySelector("form");
+
 //video 화면
 const myFace = document.getElementById("myFace");
 const muteBtn = document.getElementById("mute");
@@ -143,6 +149,7 @@ async function handleWelcomeSubmit(event) {
   socket.emit("join_room", input.value);
   roomName = input.value;
   input.value = "";
+  msgForm.addEventListener("submit", handleMessageSubmit);
 }
 
 welcomeForm.addEventListener("submit", handleWelcomeSubmit);
@@ -153,7 +160,8 @@ socket.on("welcome", async () => {
   // Data Channel => offer가 new DataChannel 해줘야함.
   myDataChannel = myPeerConnection.createDataChannel("chat");
   myDataChannel.addEventListener("message", (event) => {
-    console.log(event.data);
+    //console.log(event.data);
+    addMessage(event.data);
   });
   console.log("made data channel");
 
@@ -167,6 +175,22 @@ socket.on("welcome", async () => {
   socket.emit("offer", offer, roomName);
 });
 
+function handleMessageSubmit(event) {
+  event.preventDefault();
+  const input = room.querySelector("#msg input");
+  const value = input.value;
+  myDataChannel.send(value);
+  addMessage(value);
+  input.value = "";
+}
+
+function addMessage(msg) {
+  const ul = room.querySelector("ul");
+  const li = document.createElement("li");
+  li.innerText = msg;
+  ul.appendChild(li);
+}
+
 // another peer RTC answer(createAnswer() => setLocalDescription()) => socket sends the answer
 socket.on("offer", async (offer) => {
   // Data Channel => offer에서 생성한 DataChannel에 이벤트 등록
@@ -174,10 +198,10 @@ socket.on("offer", async (offer) => {
     myDataChannel = event.channel; // offer받는 쪽에서 channel을 정의해야함.
     // chat 보내려면 myDataChannel.send("~~~")
     myDataChannel.addEventListener("message", (event) => {
-      console.log(event.data);
+      //console.log(event.data);
+      addMessage(event.data);
     });
   });
-
   //myPeerConnection이 생성되기 전이 offer event가 시행될 수 있으므로
   //먼저 myPeerConnection을 생성해줘야함!!
   console.log("receive the offer");
@@ -278,24 +302,9 @@ function handleAddStream(data) {
 // }
 // 브라우저 내장 라이브러리 websocket으로 만든것 끝
 
-// 2022-10-18, socketio chat프로그래 주석시작
-// const welcome = document.getElementById("welcome");
-// const form = welcome.querySelector("form");
-// const room = document.getElementById("room");
-
 // room.hidden = true;
 
 // let roomName;
-
-// function handleMessageSubmit(event) {
-//   event.preventDefault();
-//   const input = room.querySelector("#msg input");
-//   const value = input.value;
-//   socket.emit("new_message", value, roomName, () => {
-//     addMessage(`You: ${value}`);
-//   });
-//   input.value = "";
-// }
 
 // function handleNicknameSubmit(event) {
 //   event.preventDefault();
@@ -312,13 +321,6 @@ function handleAddStream(data) {
 //   const nameForm = room.querySelector("#name");
 //   msgForm.addEventListener("submit", handleMessageSubmit);
 //   nameForm.addEventListener("submit", handleNicknameSubmit);
-// }
-
-// function addMessage(msg) {
-//   const ul = room.querySelector("ul");
-//   const li = document.createElement("li");
-//   li.innerText = msg;
-//   ul.appendChild(li);
 // }
 
 // function handleRoomSubmit(event) {
